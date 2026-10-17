@@ -1,0 +1,16 @@
+# Ambiente Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Resultados gerados ao rodar os testes
+reports/
+test-results/
+*.jtl
+*.log
+
+# Pastas da IDE
+.vscode/
+.idea/

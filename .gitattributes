@@ -1,2 +1,5 @@
-# Auto detect text files and perform LF normalization
+# Detecta arquivos de texto e padroniza a quebra de linha no repositório
 * text=auto
+
+# Scripts .bat precisam de quebra de linha do Windows para funcionar no cmd
+*.bat text eol=crlf

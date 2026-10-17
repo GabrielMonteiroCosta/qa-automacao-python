@@ -1,0 +1,40 @@
+name: Testes automatizados
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  testes:
+    name: Interface e API
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+
+      - name: Instalar Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Instalar o navegador do Playwright
+        run: python -m playwright install --with-deps chromium
+
+      - name: Rodar os testes
+        run: pytest
+
+      - name: Publicar relatório e evidências
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorio-testes
+          path: |
+            reports/
+            test-results/
+          if-no-files-found: ignore

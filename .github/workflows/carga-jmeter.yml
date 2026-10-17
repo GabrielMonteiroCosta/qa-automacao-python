@@ -1,0 +1,63 @@
+name: Teste de carga (JMeter)
+
+# Roda só quando alguém dispara manualmente (aba Actions > Run workflow),
+# para não sobrecarregar a API pública a cada alteração no código.
+on:
+  workflow_dispatch:
+    inputs:
+      usuarios:
+        description: Usuários virtuais simultâneos
+        default: "5"
+      repeticoes:
+        description: Repetições por usuário
+        default: "10"
+
+env:
+  JMETER_VERSAO: "5.6.3"
+
+jobs:
+  carga:
+    name: Carga leve no ServeRest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+
+      - name: Instalar Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Instalar Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Baixar o JMeter
+        run: |
+          curl -sSL -o jmeter.tgz "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSAO}.tgz"
+          tar -xzf jmeter.tgz
+
+      - name: Rodar o teste de carga
+        env:
+          USUARIOS: ${{ inputs.usuarios }}
+          REPETICOES: ${{ inputs.repeticoes }}
+        run: |
+          mkdir -p reports/jmeter
+          "apache-jmeter-${JMETER_VERSAO}/bin/jmeter" -n \
+            -t jmeter/carga-serverest.jmx \
+            -Jusuarios="$USUARIOS" -Jrepeticoes="$REPETICOES" \
+            -l reports/jmeter/resultados.jtl \
+            -e -o reports/jmeter/html
+
+      - name: Conferir critérios de aceite
+        run: python scripts/verificar_carga.py reports/jmeter/resultados.jtl --max-erros 1 --p95 2000
+
+      - name: Publicar relatório do JMeter
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorio-jmeter
+          path: reports/jmeter/
+          if-no-files-found: ignore
